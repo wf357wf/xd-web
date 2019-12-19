@@ -2,14 +2,10 @@
   <div class="table">
     <div class="header">
       <div class="left">
-        <DatePicker type="date"
-                    placeholder="Select date"
-                    style="width: 200px"></DatePicker>
-        <Button type="primary">查询</Button>
-        <Button>重制</Button>
+        <slot name="headerLeft"></slot>
       </div>
       <div class="right">
-        <Button type="primary">新增</Button>
+        <slot name="headerRight"></slot>
       </div>
     </div>
     <div class="content">
@@ -23,6 +19,7 @@
         </template>
         <template slot-scope="{ row, index }"
                   slot="action">
+          <slot name="action"></slot>
           <Button type="primary"
                   size="small"
                   style="margin-right: 5px"
@@ -44,51 +41,17 @@
     </div>
   </div>
 </template>
+
 <script>
 export default {
+  name: 'TablePage',
+  props: {
+    msg: String,
+    columns: Array,
+    data: Array
+  },
   data () {
     return {
-      columns: [
-        {
-          type: 'index',
-          title: '序号',
-          width: 80,
-          align: 'center'
-        },
-        {
-          title: '预约日期',
-          key: 'date',
-          sortable: true
-        },
-        {
-          title: '预约时间',
-          key: 'time'
-        },
-        {
-          title: '预约人',
-          slot: 'name'
-        },
-        {
-          title: '联系电话',
-          key: 'phone'
-        },
-        {
-          title: '开户人数',
-          key: 'number',
-          sortable: true
-        },
-        {
-          title: '状态',
-          key: 'state'
-        },
-        {
-          title: '操作',
-          slot: 'action',
-          width: 150,
-          align: 'center'
-        }
-      ],
-      data: [],
       nowData: [],
       pageSize: 10, // 每页显示多少条
       dataCount: 0, // 总条数
@@ -109,18 +72,6 @@ export default {
       this.nowData.splice(index, 1)
     },
     _getData () {
-      this.data = []
-      for (let i = 0; i < 100; i++) {
-        let a = {
-          date: '20191216',
-          time: '08:10:00 - 17:00:00',
-          name: '张帆' + i,
-          phone: '135****1470',
-          number: 10,
-          state: '预约中'
-        }
-        this.data.push(a)
-      }
       // 分页显示所有数据总数
       this.dataCount = this.data.length
       // 循环展示页面刚加载时需要的数据条数
@@ -130,7 +81,6 @@ export default {
       }
     },
     changepage (index) {
-      console.log(index)
       // 需要显示开始数据的index,(因为数据是从0开始的，页码是从1开始的，需要-1)
       let _start = (index - 1) * this.pageSize
       // 需要显示结束数据的index
@@ -143,10 +93,12 @@ export default {
     _nowPageSize (index) {
       // 实时获取当前需要显示的条数
       this.pageSize = index
+      this.changepage(1)
     }
   }
 }
 </script>
+
 <style scoped>
 .table {
   width: 100%;
@@ -161,6 +113,11 @@ export default {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #eee;
+}
+.left {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
 }
 .left > * {
   margin-right: 10px;
