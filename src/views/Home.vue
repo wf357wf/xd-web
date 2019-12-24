@@ -35,138 +35,157 @@
     </TablePage>
     <Modal title="预约开户"
            v-model="modal"
-           width=600
-           @on-ok="submit"
-           @on-cancel="cancel"
+           width=650
+           :closable="false"
            :mask-closable="false"
            class-name="vertical-center-modal">
-      <Row class="row">
-        <Col span="12"
-             class="col">
-        <span>预约日期</span>
-        <DatePicker v-model="value1.reservDate"
-                    :disabled="disabled"
-                    type="date"
-                    placeholder="预约日期"
-                    style="width: 200px"></DatePicker>
-        </Col>
-        <Col span="12"
-             class="col">
-        <span>预约时间</span>
-        <TimePicker v-model="value1.reservTime"
-                    :disabled="disabled"
-                    format="HH:mm"
-                    type="timerange"
-                    placement="bottom-end"
-                    placeholder="预约时间"
-                    style="width: 200px"></TimePicker>
-        </Col>
-      </Row>
-      <Row class="row">
-        <Col span="12"
-             class="col">
-        <span>预约人</span>
-        <Input v-model="value1.custName"
-               :disabled="disabled"
-               placeholder="预约人"
-               clearable
-               style="width: 200px" />
-        </Col>
-        <Col span="12"
-             class="col">
-        <span>联系电话</span>
-        <Input v-model="value1.tel"
-               :disabled="disabled"
-               placeholder="联系电话"
-               clearable
-               style="width: 200px" />
-        </Col>
-      </Row>
-      <Row class="row">
-        <Col span="12"
-             class="col">
-        <span>开户人数</span>
-        <Input v-model="value1.reservNum"
-               :disabled="disabled"
-               placeholder="开户人数"
-               clearable
-               style="width: 200px" />
-        </Col>
-      </Row>
-      <Row class="row">
-        <Col span="24"
-             class="col">
-        <span>上门地址</span>
-        <Input v-model="value1.reservAddr"
-               :disabled="disabled"
-               class="textarea"
-               type="textarea"
-               :autosize="{minRows: 2,maxRows: 5}"
-               placeholder="上门地址" />
-        </Col>
-      </Row>
-      <Row class="row"
-           v-show="commentFlag">
-        <Col span="12"
-             class="col">
-        <span>满意度</span>
-        <Select v-model="value3.satisfaction"
-                @on-change="changeOption"
-                :disabled="disabled"
-                style="width:200px">
-          <Option v-for="item in cityList"
-                  :value="item.value"
-                  :key="item.value">{{ item.label }}</Option>
-        </Select>
-        </Col>
-      </Row>
-      <Row class="row"
-           v-show="commentFlag">
-        <Col span="24"
-             class="col">
-        <span>评价信息</span>
-        <Input v-model="value3.evaluateInf"
-               :disabled="disabled"
-               class="textarea"
-               type="textarea"
-               :autosize="{minRows: 2,maxRows: 5}"
-               placeholder="请填写评价信息" />
-        </Col>
-      </Row>
+      <Form ref="formInline1"
+            label-position="right"
+            :label-width="90"
+            :disabled="disabled"
+            :model="value1"
+            :rules="ruleInline">
+        <Row class="row">
+          <Col span="12">
+          <FormItem prop="reservDate"
+                    label="预约日期">
+            <DatePicker v-model="value1.reservDate"
+                        type="date"
+                        placeholder="预约日期"
+                        style="width: 200px"></DatePicker>
+          </FormItem>
+          </Col>
+          <Col span="12">
+          <FormItem prop="reservTime"
+                    label="预约时间">
+            <TimePicker v-model="value1.reservTime"
+                        format="HH:mm"
+                        type="timerange"
+                        placement="bottom-end"
+                        placeholder="预约时间"
+                        style="width: 200px"></TimePicker>
+          </FormItem>
+          </Col>
+        </Row>
+        <Row class="row">
+          <Col span="12">
+          <FormItem prop="custName"
+                    label="预约人">
+            <Input v-model="value1.custName"
+                   placeholder="预约人"
+                   clearable
+                   style="width: 200px" />
+          </FormItem>
+          </Col>
+          <Col span="12">
+          <FormItem prop="tel"
+                    label="联系电话">
+            <Input v-model="value1.tel"
+                   placeholder="联系电话"
+                   clearable
+                   style="width: 200px" />
+          </FormItem>
+          </Col>
+        </Row>
+        <Row class="row">
+          <Col span="12">
+          <FormItem prop="reservNum"
+                    label="开户人数">
+            <Input v-model="value1.reservNum"
+                   placeholder="开户人数"
+                   clearable
+                   style="width: 200px" />
+          </FormItem>
+          </Col>
+        </Row>
+        <Row class="row">
+          <Col span="24">
+          <FormItem prop="reservAddr"
+                    label="上门地址">
+            <Input v-model="value1.reservAddr"
+                   class="textarea"
+                   type="textarea"
+                   :autosize="{minRows: 2,maxRows: 5}"
+                   placeholder="上门地址" />
+          </FormItem>
+          </Col>
+        </Row>
+        <Row class="row"
+             v-show="commentFlag">
+          <Col span="12">
+          <FormItem label="满意度">
+            <Select v-model="value3.satisfaction"
+                    @on-change="changeOption"
+                    style="width:200px">
+              <Option v-for="item in cityList"
+                      :value="item.value"
+                      :key="item.value">{{ item.label }}</Option>
+            </Select>
+          </FormItem>
+          </Col>
+        </Row>
+        <Row class="row"
+             v-show="commentFlag">
+          <Col span="24">
+          <FormItem label="评价信息">
+            <Input v-model="value3.evaluateInf"
+                   class="textarea"
+                   type="textarea"
+                   :autosize="{minRows: 2,maxRows: 5}"
+                   placeholder="请填写评价信息" />
+          </FormItem>
+          </Col>
+        </Row>
+      </Form>
+      <div slot="footer">
+        <Button @click="handleCancel('formInline1')">取消</Button>
+        <Button type="primary"
+                @click="handleSubmit('formInline1')">确定</Button>
+      </div>
     </Modal>
     <Modal title="预约评价"
            v-model="modal1"
-           width=600
-           @on-ok="commentSubmit"
-           @on-cancel="commentCancel"
+           width=650
+           :closable="false"
            :mask-closable="false"
            class-name="vertical-center-modal">
-      <Row class="row">
-        <Col span="12"
-             class="col">
-        <span>满意度</span>
-        <Select v-model="value2.satisfaction"
-                @on-change="changeOption"
-                :disabled="disabled"
-                style="width:200px">
-          <Option v-for="item in cityList"
-                  :value="item.value"
-                  :key="item.value">{{ item.label }}</Option>
-        </Select>
-        </Col>
-      </Row>
-      <Row class="row">
-        <Col span="24"
-             class="col">
-        <span>评价信息</span>
-        <Input v-model="value2.evaluateInf"
-               :disabled="disabled"
-               class="textarea"
-               type="textarea"
-               :autosize="{minRows: 2,maxRows: 5}"
-               placeholder="请填写评价信息" />
-        </Col>
-      </Row>
+      <Form ref="formInline"
+            label-position="right"
+            :label-width="90"
+            :model="value2"
+            :rules="ruleInline">
+        <Row class="row">
+          <Col span="12">
+          <FormItem prop="satisfaction"
+                    label="满意度">
+            <Select v-model="value2.satisfaction"
+                    @on-change="changeOption"
+                    style="width:200px">
+              <Option v-for="item in cityList"
+                      :value="item.value"
+                      :key="item.value">{{ item.label }}</Option>
+            </Select>
+          </FormItem>
+          </Col>
+        </Row>
+        <Row class="row">
+          <Col span="24">
+          <FormItem prop="evaluateInf"
+                    label="评价信息">
+            <Input v-model="value2.evaluateInf"
+                   class="textarea"
+                   type="textarea"
+                   :autosize="{minRows: 2,maxRows: 5}"
+                   placeholder="请填写评价信息" />
+          </FormItem>
+          </Col>
+        </Row>
+      </Form>
+      <div slot="footer">
+        <Button @click="commentCancel('formInline')">取消</Button>
+        <Button type="primary"
+                @click="commentSubmit('formInline')">确定1</Button>
+      </div>
     </Modal>
   </div>
 </template>
@@ -304,6 +323,38 @@ export default {
       value1: {}, // 提交信息
       value2: {}, // 评价信息
       value3: {}, // 评价展示信息
+      ruleInline: {
+        custName: [
+          { required: true, message: '预约人不能为空', trigger: 'blur' }
+        ],
+        tel: [
+          { required: true, message: '联系电话不能为空', trigger: 'blur' }
+        ],
+        reservNum: [
+          { required: true, message: '开户人数不能为空', trigger: 'blur' }
+        ],
+        reservDate: [
+          { required: true, type: 'date', message: '请选择预约日期', trigger: 'change' }
+        ],
+        reservTime: [{
+          type: 'array',
+          required: true,
+          message: '请选择起止时间',
+          fields: {
+            0: { type: 'string', required: true, message: '请选择起止时间' },
+            1: { type: 'string', required: true, message: '请选择起止时间' }
+          }
+        }],
+        reservAddr: [
+          { required: true, message: '上门地址不能为空', trigger: 'blur' }
+        ],
+        satisfaction: [
+          { required: true, message: '请选择满意度', trigger: 'change' }
+        ],
+        evaluateInf: [
+          { required: true, message: '评价信息不能为空', trigger: 'blur' }
+        ]
+      },
       commentSeqNo: '',
       cityList: [
         {
@@ -426,6 +477,7 @@ export default {
           this.$Message.error(res.msg)
         }
       }).catch(err => {
+        console.log(err)
         this.$Message.error(err)
       })
     },
@@ -435,64 +487,86 @@ export default {
       this.pageSize = pageSize
       this._getData()
     },
-    submit () { // 确定提交
+    handleSubmit (name) { // 确定提交
       let Filter = this.value1
       Filter.custNo = '81501210120142001406'
-      if (this.submitFlag === '1') {
-        // 新增
-        Filter.reservDate = this.getNowFormatDate(this.value1.reservDate)
-        let jsonStr = JSON.stringify(Filter)
-        System.addPayrollList({ Filter: jsonStr }).then(res => {
-          if (res.code === 0) {
-            this.$Message.info('新增成功')
-            this._getData()
-          } else {
-            this.$Message.error(res.msg)
+      console.log('11111', name)
+      this.$refs[name].validate((valid) => {
+        if (valid) {
+          if (this.submitFlag === '1') {
+            // 新增
+            Filter.reservDate = this.getNowFormatDate(this.value1.reservDate)
+            let jsonStr = JSON.stringify(Filter)
+            System.addPayrollList({ Filter: jsonStr }).then(res => {
+              if (res.code === 0) {
+                this.modal = false
+                this.value1 = {}
+                this.$Message.info('新增成功')
+                this._getData()
+              } else {
+                this.$Message.error(res.msg)
+              }
+            }).catch(err => {
+              this.$Message.error(err)
+            })
+          } else if (this.submitFlag === '2') {
+            // 修改
+            Filter.reservDate = this.getNowFormatDate(this.value1.reservDate)
+            let jsonStr = JSON.stringify(Filter)
+            System.editPayrollDetail({ Filter: jsonStr }).then(res => {
+              if (res.code === 0) {
+                this.modal = false
+                this.value1 = {}
+                this.$Message.info('修改成功')
+                this._getData()
+              } else {
+                this.$Message.error(res.msg)
+              }
+            }).catch(err => {
+              this.$Message.error(err)
+            })
+          } else if (this.submitFlag === '3') {
+            this.disabled = false
+            this.modal = false
           }
-        }).catch(err => {
-          this.$Message.error(err)
-        })
-      } else if (this.submitFlag === '2') {
-        // 修改
-        Filter.reservDate = this.getNowFormatDate(this.value1.reservDate)
-        let jsonStr = JSON.stringify(Filter)
-        System.editPayrollDetail({ Filter: jsonStr }).then(res => {
-          if (res.code === 0) {
-            this.$Message.info('修改成功')
-            this._getData()
-          } else {
-            this.$Message.error(res.msg)
-          }
-        }).catch(err => {
-          this.$Message.error(err)
-        })
-      } else if (this.submitFlag === '3') {
-        this.disabled = false
-      }
-      this.value1 = {}
-    },
-    commentSubmit (seqNo) { // 评价提交
-      this.value1 = {}
-      let Filter = this.value2
-      Filter.seqNo = this.commentSeqNo
-      let jsonStr = JSON.stringify(Filter)
-      System.evaluateReservation({ Filter: jsonStr }).then(res => {
-        if (res.code === 0) {
-          this.$Message.info('评价完成')
-          this._getData()
         } else {
-          this.$Message.error(res.msg)
+          this.$Message.error('Fail!')
         }
-      }).catch(err => {
-        this.$Message.error(err)
       })
     },
-    cancel () { // 取消预约清空
-      this.value1 = {}
-      this.disabled = false
+    commentSubmit (name) { // 评价提交
+      this.$refs[name].validate((valid) => {
+        if (valid) {
+          this.value1 = {}
+          let Filter = this.value2
+          Filter.seqNo = this.commentSeqNo
+          let jsonStr = JSON.stringify(Filter)
+          System.evaluateReservation({ Filter: jsonStr }).then(res => {
+            if (res.code === 0) {
+              this.$Message.info('评价完成')
+              this._getData()
+              this.modal1 = false
+            } else {
+              this.$Message.error(res.msg)
+            }
+          }).catch(err => {
+            this.$Message.error(err)
+          })
+        } else {
+          this.$Message.error('Fail!')
+        }
+      })
     },
-    commentCancel () { // 取消评价清空
+    handleCancel (name) { // 取消预约清空
+      this.value1 = {}
+      this.modal = false
+      this.disabled = false
+      this.$refs[name].resetFields()
+    },
+    commentCancel (name) { // 取消评价清空
       this.value2 = {}
+      this.modal1 = false
+      this.$refs[name].resetFields()
     },
     changeOption () {
       console.log(this.value2)
@@ -520,17 +594,6 @@ export default {
   display: flex;
   align-items: center;
   margin-bottom: 20px;
-}
-.col {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-.col > span {
-  width: 60px;
-}
-.col > * {
-  margin-right: 10px;
 }
 .textarea {
   width: 500px;
