@@ -1,15 +1,21 @@
 <template>
   <div class="home">
-    <TablePage :data=data
-               :columns=columns>
+    <TableHeader>
       <div slot="headerLeft">
         <span>预约日期：</span>
         <DatePicker slot="headerLeft"
-                    v-model="date"
+                    v-model="startDate"
                     type="date"
-                    placeholder="预约日期"
+                    format="yyyy年MM月dd日"
+                    placeholder="起始日期"
                     style="width: 200px"></DatePicker>
       </div>
+      <DatePicker slot="headerLeft"
+                  v-model="endDate"
+                  type="date"
+                  format="yyyy年MM月dd日"
+                  placeholder="结束日期"
+                  style="width: 200px"></DatePicker>
       <Button slot="headerLeft"
               @click="onSearch()"
               type="primary">查询</Button>
@@ -18,46 +24,148 @@
       <Button slot="headerRight"
               @click="onAdd()"
               type="primary">添加</Button>
-      <div slot="action">
-        <Button type="primary"
-                size="small"
-                style="margin-right: 5px">View</Button>
-        <Button type="error"
-                size="small">Delete</Button>
-      </div>
+    </TableHeader>
+    <TablePage :data=data
+               :columns=columns
+               :dataCount=dataCount
+               :pageCurrent=pageCurrent
+               :loading=loading
+               :changePageCallback="changePageCallback"
+               v-if="flag">
     </TablePage>
     <Modal title="预约开户"
            v-model="modal"
-           width=800
+           width=600
+           @on-ok="submit"
+           @on-cancel="cancel"
            :mask-closable="false"
            class-name="vertical-center-modal">
-      <Row>
-        <Col span="12">
-        <span>11111</span>
-        <Input v-model="value1"
-               placeholder="Enter something..."
+      <Row class="row">
+        <Col span="12"
+             class="col">
+        <span>预约日期</span>
+        <DatePicker v-model="value1.reservDate"
+                    :disabled="disabled"
+                    type="date"
+                    placeholder="预约日期"
+                    style="width: 200px"></DatePicker>
+        </Col>
+        <Col span="12"
+             class="col">
+        <span>预约时间</span>
+        <TimePicker v-model="value1.reservTime"
+                    :disabled="disabled"
+                    format="HH:mm"
+                    type="timerange"
+                    placement="bottom-end"
+                    placeholder="预约时间"
+                    style="width: 200px"></TimePicker>
+        </Col>
+      </Row>
+      <Row class="row">
+        <Col span="12"
+             class="col">
+        <span>预约人</span>
+        <Input v-model="value1.custName"
+               :disabled="disabled"
+               placeholder="预约人"
                clearable
                style="width: 200px" />
         </Col>
-        <Col span="12">
-        <span>22222</span>
-        <Input v-model="value2"
-               placeholder="Enter something..."
+        <Col span="12"
+             class="col">
+        <span>联系电话</span>
+        <Input v-model="value1.tel"
+               :disabled="disabled"
+               placeholder="联系电话"
                clearable
                style="width: 200px" />
         </Col>
       </Row>
-      <Row>
-        <Col span="12">col-12</Col>
-        <Col span="12">col-12</Col>
+      <Row class="row">
+        <Col span="12"
+             class="col">
+        <span>开户人数</span>
+        <Input v-model="value1.reservNum"
+               :disabled="disabled"
+               placeholder="开户人数"
+               clearable
+               style="width: 200px" />
+        </Col>
       </Row>
-      <Row>
-        <Col span="12">col-12</Col>
-        <Col span="12">col-12</Col>
+      <Row class="row">
+        <Col span="24"
+             class="col">
+        <span>上门地址</span>
+        <Input v-model="value1.reservAddr"
+               :disabled="disabled"
+               class="textarea"
+               type="textarea"
+               :autosize="{minRows: 2,maxRows: 5}"
+               placeholder="上门地址" />
+        </Col>
       </Row>
-      <Row>
-        <Col span="12">col-12</Col>
-        <Col span="12">col-12</Col>
+      <Row class="row"
+           v-show="commentFlag">
+        <Col span="12"
+             class="col">
+        <span>满意度</span>
+        <Select v-model="value3.satisfaction"
+                @on-change="changeOption"
+                :disabled="disabled"
+                style="width:200px">
+          <Option v-for="item in cityList"
+                  :value="item.value"
+                  :key="item.value">{{ item.label }}</Option>
+        </Select>
+        </Col>
+      </Row>
+      <Row class="row"
+           v-show="commentFlag">
+        <Col span="24"
+             class="col">
+        <span>评价信息</span>
+        <Input v-model="value3.evaluateInf"
+               :disabled="disabled"
+               class="textarea"
+               type="textarea"
+               :autosize="{minRows: 2,maxRows: 5}"
+               placeholder="请填写评价信息" />
+        </Col>
+      </Row>
+    </Modal>
+    <Modal title="预约评价"
+           v-model="modal1"
+           width=600
+           @on-ok="commentSubmit"
+           @on-cancel="commentCancel"
+           :mask-closable="false"
+           class-name="vertical-center-modal">
+      <Row class="row">
+        <Col span="12"
+             class="col">
+        <span>满意度</span>
+        <Select v-model="value2.satisfaction"
+                @on-change="changeOption"
+                :disabled="disabled"
+                style="width:200px">
+          <Option v-for="item in cityList"
+                  :value="item.value"
+                  :key="item.value">{{ item.label }}</Option>
+        </Select>
+        </Col>
+      </Row>
+      <Row class="row">
+        <Col span="24"
+             class="col">
+        <span>评价信息</span>
+        <Input v-model="value2.evaluateInf"
+               :disabled="disabled"
+               class="textarea"
+               type="textarea"
+               :autosize="{minRows: 2,maxRows: 5}"
+               placeholder="请填写评价信息" />
+        </Col>
       </Row>
     </Modal>
   </div>
@@ -65,13 +173,22 @@
 
 <script>
 import TablePage from '@/components/TablePage.vue'
+import TableHeader from '@/components/TableHeader.vue'
+import System from '../service/system'
 export default {
   name: 'home',
   components: {
-    TablePage
+    TablePage,
+    TableHeader
   },
   data () {
     return {
+      Filter: {}, // 数据提交对象
+      flag: false, // 组件现实隐藏状态
+      loading: false, // 组件请求loading状态
+      submitFlag: '1', // 新增修改评价状态 1:新增 2:修改 3:查看 4:评价
+      disabled: false, // 表单禁用状态
+      commentFlag: false, // 评论详情是否显示
       columns: [
         {
           type: 'index',
@@ -81,80 +198,341 @@ export default {
         },
         {
           title: '预约日期',
-          key: 'date',
+          key: 'reservDate',
           sortable: true
         },
         {
           title: '预约时间',
-          key: 'time'
+          key: 'reservTime'
         },
         {
           title: '预约人',
-          slot: 'name'
+          key: 'custName'
         },
         {
           title: '联系电话',
-          key: 'phone'
+          key: 'tel'
         },
         {
           title: '开户人数',
-          key: 'number',
+          key: 'reservNum',
           sortable: true
         },
         {
           title: '状态',
-          key: 'state'
+          key: 'stsNote'
         },
         {
-          title: '操作',
-          slot: 'action',
+          title: 'Action',
+          key: 'action',
           width: 150,
-          align: 'center'
+          align: 'left',
+          render: (h, params) => {
+            return h('div', [
+              h('Button', {
+                props: {
+                  shape: 'circle',
+                  type: 'text',
+                  icon: 'ios-menu-outline'
+                },
+                style: {
+                  marginRight: '5px'
+                },
+                on: {
+                  click: () => {
+                    this.show(params.index)
+                  }
+                }
+              }),
+              h('Button', {
+                props: {
+                  shape: 'circle',
+                  type: 'text',
+                  icon: 'ios-create-outline'
+                },
+                style: {
+                  display: (params.row.reservSts === '1') ? 'inline-block' : 'none'
+                },
+                on: {
+                  click: () => {
+                    this.modify(params.index)
+                  }
+                }
+              }),
+              h('Button', {
+                props: {
+                  shape: 'circle',
+                  type: 'text',
+                  icon: 'ios-remove-circle-outline'
+                },
+                style: {
+                  display: (params.row.reservSts === '1') ? 'inline-block' : 'none'
+                },
+                on: {
+                  click: () => {
+                    this.stop(params.index)
+                  }
+                }
+              }),
+              h('Button', {
+                props: {
+                  shape: 'circle',
+                  type: 'text',
+                  icon: 'ios-thumbs-up-outline'
+                },
+                style: {
+                  display: (params.row.reservSts === '4') ? 'inline-block' : 'none'
+                },
+                on: {
+                  click: () => {
+                    this.comment(params.index)
+                  }
+                }
+              })
+            ])
+          }
+        }
+      ], // 表头信息
+      data: null, // 表格数据
+      pageSize: 10, // 每页显示多少条
+      dataCount: 25, // 总条数
+      pageCurrent: 1, // 当前页
+      startDate: new Date(), // 查询栏预约开始日期
+      endDate: new Date(), // 查询栏预约结束日期
+      modal: false, // 弹出框状态
+      modal1: false, // 评价弹出框状态
+      value1: {}, // 提交信息
+      value2: {}, // 评价信息
+      value3: {}, // 评价展示信息
+      commentSeqNo: '',
+      cityList: [
+        {
+          value: '1',
+          label: '非常满意'
+        },
+        {
+          value: '2',
+          label: '满意'
+        },
+        {
+          value: '3',
+          label: '一般'
+        },
+        {
+          value: '4',
+          label: '不满意'
+        },
+        {
+          value: '5',
+          label: '非常不满意'
         }
       ],
-      data: [],
-      date: new Date(),
-      modal: false,
-      value1: '',
-      value2: ''
+      model1: ''
     }
   },
-  created () {
+  mounted () {
     this._getData()
   },
   methods: {
-    show (index) {
-      this.$Modal.info({
-        title: 'User Info',
-        content: `Name：${this.nowData[index].name}`
-      })
+    onSearch () { // 查询
+      this._getData()
     },
-    remove (index) {
-      this.nowData.splice(index, 1)
-    },
-    _getData () {
-      this.data = []
-      for (let i = 0; i < 100; i++) {
-        let a = {
-          date: '20191216',
-          time: '08:10:00 - 17:00:00',
-          name: '张帆' + i,
-          phone: '135****1470',
-          number: 10 + i,
-          state: '预约中'
-        }
-        this.data.push(a)
-      }
-    },
-    onSearch () {
-      console.log(this.date)
-    },
-    onClear () {
+    onClear () { // 重制查询日期
       this.date = ''
     },
-    onAdd () {
+    onAdd () { // 新增弹出狂显示
       this.modal = true
+      this.submitFlag = '1'
+    },
+    show (index) { // 信息展示
+      this.modal = true
+      this.disabled = true
+      this.submitFlag = '3'
+      let seqNo = this.data[index].seqNo
+      System.getPayrollDetail({ seqNo }).then(res => {
+        console.log('gggg', res)
+        if (res.data.code === 0) {
+          this.value1 = res.data.data
+          this.value1.reservTime = res.data.data.timeScope // 日期格式为数组 需要单独赋值
+          if (res.data.result === '1') {
+            this.commentFlag = true
+            let obj = {}
+            obj.satisfaction = res.data.data.satisfaction
+            obj.evaluateInf = res.data.data.evaluateInf
+            this.value3 = obj
+          } else {
+            this.commentFlag = false
+          }
+        } else {
+          this.$Message.error(res.msg)
+        }
+      }).catch(err => {
+        this.$Message.error(err)
+      })
+    },
+    modify (index) { // 修改操作
+      this.modal = true
+      this.submitFlag = '2'
+      let seqNo = this.data[index].seqNo
+      System.getPayrollDetail({ seqNo }).then(res => {
+        if (res.data.code === 0) {
+          this.value1 = res.data.data
+          this.value1.reservTime = res.data.data.timeScope // 日期格式为数组 需要单独赋值
+        } else {
+          this.$Message.error(res.msg)
+        }
+      }).catch(err => {
+        this.$Message.error(err)
+      })
+      // this.value1 = JSON.parse(JSON.stringify(this.data[index])) // 数据解耦
+    },
+    stop (index) { // 取消预约
+      let seqNo = this.data[index].seqNo
+      this.$Modal.confirm({
+        title: '提醒',
+        content: '<p>确定取消本条预约吗？</p>',
+        onOk: () => {
+          System.cancelPayrollDetail({ seqNo }).then(res => {
+            if (res.data.code === 0) {
+              this.$Message.info('您已取消预约')
+              this._getData()
+            } else {
+              this.$Message.error(res.msg)
+            }
+          }).catch(err => {
+            this.$Message.error(err)
+          })
+        }
+      })
+    },
+    comment (index) { // 评价
+      this.modal1 = true
+      this.commentSeqNo = this.data[index].seqNo
+    },
+    _getData () { // 获取数据
+      this.loading = true
+      let Filter = this.Filter
+      Filter.limit = this.pageSize
+      Filter.page = this.pageCurrent
+      Filter.startDate = this.getNowFormatDate(this.startDate)
+      Filter.endDate = this.getNowFormatDate(this.endDate)
+      System.getPayrollList({ Filter }).then(res => {
+        if (res.data.code === 0) {
+          this.data = res.data.data
+          this.dataCount = res.data.count
+          this.flag = true
+          this.loading = false
+        } else {
+          this.$Message.error(res.msg)
+        }
+      }).catch(err => {
+        this.$Message.error(err)
+      })
+    },
+    changePageCallback (pageCurrent, pageSize) { // 跳页
+      // 此时的page为传过来的页数，pageSize为每页条数
+      this.pageCurrent = pageCurrent
+      this.pageSize = pageSize
+      this._getData()
+    },
+    submit () { // 确定提交
+      let Filter = this.value1
+      Filter.custNo = '81501210120142001406'
+      if (this.submitFlag === '1') {
+        // 新增
+        Filter.reservDate = this.getNowFormatDate(this.value1.reservDate)
+        let jsonStr = JSON.stringify(Filter)
+        System.addPayrollList({ Filter: jsonStr }).then(res => {
+          if (res.code === 0) {
+            this.$Message.info('新增成功')
+            this._getData()
+          } else {
+            this.$Message.error(res.msg)
+          }
+        }).catch(err => {
+          this.$Message.error(err)
+        })
+      } else if (this.submitFlag === '2') {
+        // 修改
+        Filter.reservDate = this.getNowFormatDate(this.value1.reservDate)
+        let jsonStr = JSON.stringify(Filter)
+        System.editPayrollDetail({ Filter: jsonStr }).then(res => {
+          if (res.code === 0) {
+            this.$Message.info('修改成功')
+            this._getData()
+          } else {
+            this.$Message.error(res.msg)
+          }
+        }).catch(err => {
+          this.$Message.error(err)
+        })
+      } else if (this.submitFlag === '3') {
+        this.disabled = false
+      }
+      this.value1 = {}
+    },
+    commentSubmit (seqNo) { // 评价提交
+      this.value1 = {}
+      let Filter = this.value2
+      Filter.seqNo = this.commentSeqNo
+      let jsonStr = JSON.stringify(Filter)
+      System.evaluateReservation({ Filter: jsonStr }).then(res => {
+        if (res.code === 0) {
+          this.$Message.info('评价完成')
+          this._getData()
+        } else {
+          this.$Message.error(res.msg)
+        }
+      }).catch(err => {
+        this.$Message.error(err)
+      })
+    },
+    cancel () { // 取消预约清空
+      this.value1 = {}
+      this.disabled = false
+    },
+    commentCancel () { // 取消评价清空
+      this.value2 = {}
+    },
+    changeOption () {
+      console.log(this.value2)
+    },
+    getNowFormatDate (d) { // 时期格式化
+      var date = d
+      var seperator1 = '-'
+      var year = date.getFullYear()
+      var month = date.getMonth() + 1
+      var strDate = date.getDate()
+      if (month >= 1 && month <= 9) {
+        month = '0' + month
+      }
+      if (strDate >= 0 && strDate <= 9) {
+        strDate = '0' + strDate
+      }
+      var currentdate = year + seperator1 + month + seperator1 + strDate
+      return currentdate
     }
   }
 }
 </script>
+<style scoped>
+.row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.col {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.col > span {
+  width: 60px;
+}
+.col > * {
+  margin-right: 10px;
+}
+.textarea {
+  width: 500px;
+}
+</style>

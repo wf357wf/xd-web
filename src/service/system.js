@@ -4,26 +4,28 @@
  */
 import { call } from '../utils/call'
 export default class System {
-  static getInterfaceList = ({ custNo }) => {
+  static getPayrollList = ({ Filter }) => {
     return call({
       method: 'GET',
-      url: `/ReleAgAcctUri/getReleAgAcctList`,
+      url: `/ReservationOpenUri/getReservationList`,
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json;charset=utf-8'
       },
       params: {
-        page: 1,
-        limit: 100,
-        agNo: custNo
+        custNo: '81501210120142001406',
+        page: Filter.page,
+        limit: Filter.limit,
+        startDate: Filter.startDate,
+        endDate: Filter.endDate
       }
     })
   }
-  static addInterfaceList = ({ Filter }) => {
+  static addPayrollList = ({ Filter }) => {
     return new Promise((resolve, reject) => {
       resolve(call({
-        method: 'POST',
-        url: `/ReleAgAcctUri/addReleAgAcct`,
+        method: 'PUT',
+        url: `/ReservationOpenUri/addReservation`,
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json;charset=utf-8'
@@ -41,46 +43,73 @@ export default class System {
       }))
     })
   }
-  static delInterfaceList = ({ Filter }) => {
+  static getPayrollDetail = ({ seqNo }) => {
     return call({
-      method: 'DELETE',
-      url: `/ReleAgAcctUri/delReleAgAcct`,
+      method: 'GET',
+      url: `/ReservationOpenUri/getReservation`,
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json;charset=utf-8'
       },
       params: {
-        custNo: Filter.custNo,
-        cardNum: Filter.cardNum
+        seqNo: seqNo
       }
     })
   }
-  static getAwardList = ({ Filter }) => {
-    return call({
-      method: 'GET',
-      url: `/AwardGainInfUri/getAwardBaseI`,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json;charset=utf-8'
-      },
-      params: {
-        custNo: Filter.custNo,
-        cardNum: Filter.cardNum
-      }
+  static editPayrollDetail = ({ Filter }) => {
+    return new Promise((resolve, reject) => {
+      resolve(call({
+        method: 'POST',
+        url: `/ReservationOpenUri/editReservation`,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json;charset=utf-8'
+        },
+        data: Filter
+      }).then(res => {
+        return Promise.resolve(res.data)
+      }).catch(err => {
+        console.log(err)
+        return Promise.resolve({
+          'retCode': '1',
+          'retMsg': '网络异常',
+          'data': 'first_login:1'
+        })
+      }))
     })
   }
-  static getAwardGainRecordList = ({ custNo }) => {
+  static evaluateReservation = ({ Filter }) => {
+    return new Promise((resolve, reject) => {
+      resolve(call({
+        method: 'POST',
+        url: `/ReservationOpenUri/evaluateReservation`,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json;charset=utf-8'
+        },
+        data: Filter
+      }).then(res => {
+        return Promise.resolve(res.data)
+      }).catch(err => {
+        console.log(err)
+        return Promise.resolve({
+          'retCode': '1',
+          'retMsg': '网络异常',
+          'data': 'first_login:1'
+        })
+      }))
+    })
+  }
+  static cancelPayrollDetail = ({ seqNo }) => {
     return call({
       method: 'GET',
-      url: `/AwardGainInfUri/getAwardGainRecordList`,
+      url: `/ReservationOpenUri/cancelReservation`,
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json;charset=utf-8'
       },
       params: {
-        page: 1,
-        limit: 100,
-        agNo: custNo
+        seqNo: seqNo
       }
     })
   }
