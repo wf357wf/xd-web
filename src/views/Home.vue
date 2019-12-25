@@ -81,6 +81,7 @@
           <FormItem prop="tel"
                     label="联系电话">
             <Input v-model="value1.tel"
+                   type="tel"
                    placeholder="联系电话"
                    clearable
                    style="width: 200px" />
@@ -92,6 +93,7 @@
           <FormItem prop="reservNum"
                     label="开户人数">
             <Input v-model="value1.reservNum"
+                   maxlength="10"
                    placeholder="开户人数"
                    clearable
                    style="width: 200px" />
@@ -193,6 +195,7 @@
 <script>
 import TablePage from '@/components/TablePage.vue'
 import TableHeader from '@/components/TableHeader.vue'
+import validator from 'validator'
 import System from '../service/system'
 export default {
   name: 'home',
@@ -316,8 +319,8 @@ export default {
       pageSize: 10, // 每页显示多少条
       dataCount: 25, // 总条数
       pageCurrent: 1, // 当前页
-      startDate: new Date(), // 查询栏预约开始日期
-      endDate: new Date(), // 查询栏预约结束日期
+      startDate: '', // 查询栏预约开始日期
+      endDate: '', // 查询栏预约结束日期
       modal: false, // 弹出框状态
       modal1: false, // 评价弹出框状态
       value1: {}, // 提交信息
@@ -325,13 +328,36 @@ export default {
       value3: {}, // 评价展示信息
       ruleInline: {
         custName: [
-          { required: true, message: '预约人不能为空', trigger: 'blur' }
+          { required: true, message: '预约人不能为空', trigger: 'blur' },
+          {
+            min: 2,
+            max: 12,
+            message: '预约人长度 2 - 12个字符'
+          }
         ],
         tel: [
-          { required: true, message: '联系电话不能为空', trigger: 'blur' }
+          { required: true, message: '联系电话不能为空', trigger: 'blur' },
+          {
+            validator: (rule, value, callback) => {
+              if (validator.isMobilePhone(value, 'zh-CN')) {
+                callback()
+              } else {
+                callback(new Error('手机号码格式不正确'))
+              }
+            }
+          }
         ],
         reservNum: [
-          { required: true, message: '开户人数不能为空', trigger: 'blur' }
+          { required: true, message: '开户人数不能为空', trigger: 'blur' },
+          {
+            validator: (rule, value, callback) => {
+              if (validator.isNumeric(value)) {
+                callback()
+              } else {
+                callback(new Error('只能输入数字'))
+              }
+            }
+          }
         ],
         reservDate: [
           { required: true, type: 'date', message: '请选择预约日期', trigger: 'change' }
@@ -389,7 +415,8 @@ export default {
       this._getData()
     },
     onClear () { // 重制查询日期
-      this.date = ''
+      this.startDate = ''
+      this.endDate = ''
     },
     onAdd () { // 新增弹出狂显示
       this.modal = true
@@ -573,6 +600,9 @@ export default {
     },
     getNowFormatDate (d) { // 时期格式化
       var date = d
+      if (d === '' || d === null || d === undefined) {
+        return d
+      }
       var seperator1 = '-'
       var year = date.getFullYear()
       var month = date.getMonth() + 1
